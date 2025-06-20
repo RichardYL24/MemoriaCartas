@@ -22,7 +22,8 @@ public class ResultScreen extends JFrame {
         );
         mensaje.setFont(new Font("Arial", Font.BOLD, 20));
 
-        JLabel tiempoLabel = new JLabel("Tu tiempo: " + tiempo + " segundos", SwingConstants.CENTER);
+        JLabel tiempoLabel = new JLabel("Movimientos utilizados: " + tiempo, SwingConstants.CENTER);
+
 
         JButton volver = new JButton("Volver al menú");
         volver.addActionListener(e -> {

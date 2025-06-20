@@ -19,32 +19,35 @@ public class GameBoard extends JFrame {
     private final List<CardModel> cardModels = new ArrayList<>();
     private final List<CardButton> cardButtons = new ArrayList<>();
     private boolean isBlocked = false;
-    private JLabel timerLabel = new JLabel("Tiempo: 0s");
-    private Timer gameTimer;
-    private int secondsElapsed = 0;
-    private final int TIEMPO_LIMITE = 120; // 2 minutos
-
+    private final int MAX_MOVIMIENTOS;
+    private int movimientosRestantes;
+    private JLabel movimientosLabel;
+    
     public GameBoard(int numberOfPairs) {
         setTitle("Juego de Memoria");
         setSize(800, 850);
         setLayout(new BorderLayout(10, 10));
 
+        // Calcula los movimientos máximos permitidos
+        MAX_MOVIMIENTOS = numberOfPairs * 2 + 5;
+        movimientosRestantes = MAX_MOVIMIENTOS;
+
         // Estética
         Font fuente = new Font("SansSerif", Font.BOLD, 18);
-        timerLabel.setFont(fuente);
-        timerLabel.setForeground(Color.DARK_GRAY);
+        movimientosLabel = new JLabel("Movimientos restantes: " + movimientosRestantes);
+        movimientosLabel.setFont(fuente);
+        movimientosLabel.setForeground(Color.DARK_GRAY);
 
         JButton backButton = new JButton("⟵ Volver al Menú");
         backButton.setFont(fuente);
         backButton.addActionListener(e -> {
-            gameTimer.stop();
             dispose();
             new MainMenu();
         });
 
         JPanel topPanel = new JPanel(new BorderLayout());
         topPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-        topPanel.add(timerLabel, BorderLayout.WEST);
+        topPanel.add(movimientosLabel, BorderLayout.WEST);
         topPanel.add(backButton, BorderLayout.EAST);
         add(topPanel, BorderLayout.NORTH);
 
@@ -71,8 +74,6 @@ public class GameBoard extends JFrame {
             gridPanel.add(button);
         }
 
-        startTimer();
-
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
         setVisible(true);
@@ -87,14 +88,20 @@ public class GameBoard extends JFrame {
         if (logic.isReadyToCheck()) {
             isBlocked = true;
 
+            // ↓ Disminuye un movimiento cuando selecciona dos cartas
+            movimientosRestantes--;
+            movimientosLabel.setText("Movimientos restantes: " + movimientosRestantes);
+
             Timer delay = new Timer(1000, e -> {
                 logic.checkForMatch();
                 updateAllButtons();
                 isBlocked = false;
 
                 if (logic.isGameWon(cardModels)) {
-                    gameTimer.stop();
-                    new ResultScreen(true, secondsElapsed);
+                    new ResultScreen(true, MAX_MOVIMIENTOS - movimientosRestantes);
+                    dispose();
+                } else if (movimientosRestantes <= 0) {
+                    new ResultScreen(false, MAX_MOVIMIENTOS);
                     dispose();
                 }
             });
@@ -107,19 +114,5 @@ public class GameBoard extends JFrame {
         for (CardButton b : cardButtons) {
             b.updateVisual();
         }
-    }
-
-    private void startTimer() {
-        gameTimer = new Timer(1000, e -> {
-            secondsElapsed++;
-            timerLabel.setText("⏱ Tiempo: " + secondsElapsed + "s");
-
-            if (secondsElapsed >= TIEMPO_LIMITE) {
-                gameTimer.stop();
-                new ResultScreen(false, secondsElapsed);
-                dispose();
-            }
-        });
-        gameTimer.start();
     }
 }
