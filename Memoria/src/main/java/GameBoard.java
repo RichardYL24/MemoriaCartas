@@ -9,83 +9,117 @@
  */
 
 import javax.swing.*;
-import java.awt.*;
-import java.awt.event.*;
-import java.util.Collections;
 import java.util.ArrayList;
-import javax.swing.Timer; // usa el Timer de Swing
-import java.util.List;    // usa la interfaz List de java.util
-
+import java.util.Collections;
+import java.util.List;
+import java.awt.*;
 
 public class GameBoard extends JFrame {
-    private Card selectedCard1 = null;
-    private Card selectedCard2 = null;
-    private Timer timer;
-    private List<Card> cards = new ArrayList<>();
+    private final GameLogic logic = new GameLogic();
+    private final List<CardModel> cardModels = new ArrayList<>();
+    private final List<CardButton> cardButtons = new ArrayList<>();
+    private boolean isBlocked = false;
+    private JLabel timerLabel = new JLabel("Tiempo: 0s");
+    private Timer gameTimer;
+    private int secondsElapsed = 0;
+    private final int TIEMPO_LIMITE = 120; // 2 minutos
 
-    public GameBoard() {
+    public GameBoard(int numberOfPairs) {
         setTitle("Juego de Memoria");
-        setSize(600, 600);
-        setLayout(new GridLayout(4, 4));
+        setSize(800, 850);
+        setLayout(new BorderLayout(10, 10));
 
-        for (int i = 1; i <= 8; i++) {
-            cards.add(new Card(i, "images/" + i + ".jpg"));
-            cards.add(new Card(i, "images/" + i + ".jpg"));
+        // Estética
+        Font fuente = new Font("SansSerif", Font.BOLD, 18);
+        timerLabel.setFont(fuente);
+        timerLabel.setForeground(Color.DARK_GRAY);
+
+        JButton backButton = new JButton("⟵ Volver al Menú");
+        backButton.setFont(fuente);
+        backButton.addActionListener(e -> {
+            gameTimer.stop();
+            dispose();
+            new MainMenu();
+        });
+
+        JPanel topPanel = new JPanel(new BorderLayout());
+        topPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        topPanel.add(timerLabel, BorderLayout.WEST);
+        topPanel.add(backButton, BorderLayout.EAST);
+        add(topPanel, BorderLayout.NORTH);
+
+        int totalCards = numberOfPairs * 2;
+        int rows = (int) Math.sqrt(totalCards);
+        int cols = totalCards / rows;
+
+        JPanel gridPanel = new JPanel(new GridLayout(rows, cols, 10, 10));
+        gridPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        add(gridPanel, BorderLayout.CENTER);
+
+        for (int i = 1; i <= numberOfPairs; i++) {
+            cardModels.add(new CardModel(i));
+            cardModels.add(new CardModel(i));
         }
 
-        Collections.shuffle(cards);
+        Collections.shuffle(cardModels);
 
-        for (Card card : cards) {
-            add(card);
-            card.addActionListener(e -> handleCardClick(card));
+        for (CardModel model : cardModels) {
+            CardButton button = new CardButton(model, "images/" + model.getId() + ".jpg");
+            button.setPreferredSize(new Dimension(100, 100));
+            button.addActionListener(e -> onCardClick(button));
+            cardButtons.add(button);
+            gridPanel.add(button);
         }
+
+        startTimer();
 
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
         setVisible(true);
     }
 
-    private void handleCardClick(Card card) {
-        if (card.isMatched() || card == selectedCard1 || card == selectedCard2) return;
+    private void onCardClick(CardButton button) {
+        if (isBlocked) return;
 
-        card.showFront();
+        logic.selectCard(button.getCardModel());
+        button.updateVisual();
 
-        if (selectedCard1 == null) {
-            selectedCard1 = card;
-        } else {
-            selectedCard2 = card;
-            if (selectedCard1.getId() == selectedCard2.getId()) {
-                selectedCard1.setMatched(true);
-                selectedCard2.setMatched(true);
-                resetSelection();
-                checkWin();
-            } else {
-                timer = new Timer(1000, e -> {
-                    selectedCard1.showBack();
-                    selectedCard2.showBack();
-                    resetSelection();
-                });
-                timer.setRepeats(false);
-                timer.start();
-            }
+        if (logic.isReadyToCheck()) {
+            isBlocked = true;
+
+            Timer delay = new Timer(1000, e -> {
+                logic.checkForMatch();
+                updateAllButtons();
+                isBlocked = false;
+
+                if (logic.isGameWon(cardModels)) {
+                    gameTimer.stop();
+                    new ResultScreen(true, secondsElapsed);
+                    dispose();
+                }
+            });
+            delay.setRepeats(false);
+            delay.start();
         }
     }
 
-    private void resetSelection() {
-        selectedCard1 = null;
-        selectedCard2 = null;
+    private void updateAllButtons() {
+        for (CardButton b : cardButtons) {
+            b.updateVisual();
+        }
     }
 
-    private void checkWin() {
-        boolean allMatched = true;
-        for (Card c : cards) {
-            if (!c.isMatched()) {
-                allMatched = false;
-                break;
+    private void startTimer() {
+        gameTimer = new Timer(1000, e -> {
+            secondsElapsed++;
+            timerLabel.setText("⏱ Tiempo: " + secondsElapsed + "s");
+
+            if (secondsElapsed >= TIEMPO_LIMITE) {
+                gameTimer.stop();
+                new ResultScreen(false, secondsElapsed);
+                dispose();
             }
-        }
-        if (allMatched) {
-            JOptionPane.showMessageDialog(this, "¡Felicidades! Has encontrado todas las parejas.");
-        }
+        });
+        gameTimer.start();
     }
 }

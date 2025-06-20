@@ -1,3 +1,7 @@
+MainMenu.class
+ResultScreen.class
 Main.class
-Card.class
+GameLogic.class
 GameBoard.class
+CardModel.class
+CardButton.class

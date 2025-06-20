@@ -11,6 +11,6 @@ import javax.swing.SwingUtilities;
 
 public class Main {
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> new GameBoard());
+        javax.swing.SwingUtilities.invokeLater(MainMenu::new);
     }
 }
