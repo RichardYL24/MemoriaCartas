@@ -1,0 +1,20 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Main",
+            "request": "launch",
+            "mainClass": "Main",
+            "projectName": "Memoria"
+        },
+        {
+            "type": "java",
+            "name": "Launch JavaFX App",
+            "request": "launch",
+            "mainClass": "fx.MainFX",
+            "projectName": "Memoria",
+            "vmArgs": "--module-path \"${user.home}/.m2/repository/org/openjfx/javafx-controls/21\" --add-modules javafx.controls,javafx.fxml"
+        }
+    ]
+}

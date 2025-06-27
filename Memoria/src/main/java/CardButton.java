@@ -9,9 +9,10 @@
  */
 import javax.swing.*;
 import java.awt.*;
+import fx.CardModel;
 
 public class CardButton extends JButton {
-    private final CardModel model;
+    private CardModel model;
     private final ImageIcon frontImage;
     private final ImageIcon backImage;
 
@@ -33,6 +34,16 @@ public class CardButton extends JButton {
     public CardModel getCardModel() {
         return model;
     }
+    
+    public void setCardModel(CardModel model) {
+        this.model = model;
+        // Recarga la imagen frontal según el nuevo modelo
+        setIcon(model.isFaceUp() || model.isMatched() ? 
+            new ImageIcon("images/" + model.getId() + ".jpg") : 
+            new ImageIcon("images/back.jpg"));
+        updateVisual();
+    }
+
 
     public void updateVisual() {
         setIcon(model.isFaceUp() || model.isMatched() ? frontImage : backImage);

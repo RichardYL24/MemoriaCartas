@@ -36,7 +36,13 @@ public class MainMenu extends JFrame {
                 pares = 8;
             }
 
-            new GameBoard(pares);
+            // Pedir nombres de jugadores
+            String nombre1 = JOptionPane.showInputDialog(this, "Nombre del Jugador 1:");
+            if (nombre1 == null || nombre1.trim().isEmpty()) nombre1 = "Jugador 1";
+            String nombre2 = JOptionPane.showInputDialog(this, "Nombre del Jugador 2:");
+            if (nombre2 == null || nombre2.trim().isEmpty()) nombre2 = "Jugador 2";
+
+            new GameBoard(pares, nombre1, nombre2);
             dispose(); // Cierra el menú
         });
 
